@@ -13,20 +13,20 @@ do_action('wc_deposits_enqueue_deposit_button_scripts');
                        type='radio' <?php echo checked($default_checked, 'deposit'); ?> class='input-radio'
                        value='deposit'>
                 <label id="pay-deposit-label"
-                       for='pay-deposit'><?php esc_html_e($deposit_text, 'woocommerce-deposits'); ?></label>
+                       for='pay-deposit'><?php esc_html_e($deposit_text, 'reservation-deposits'); ?></label>
                 <?php if ($basic_buttons) { ?> <br/> <?php } ?>
                 <?php if (isset($force_deposit) && $force_deposit === 'yes') { ?>
                     <input id='pay-full-amount' name='deposit-radio' type='radio'
                            class='input-radio'
                            disabled>
                     <label id="pay-full-amount-label" for='pay-full-amount'
-                           onclick=''><?php esc_html_e($full_text, 'woocommerce-deposits'); ?></label>
+                           onclick=''><?php esc_html_e($full_text, 'reservation-deposits'); ?></label>
                 <?php } else { ?>
                     <input id='pay-full-amount' name='deposit-radio'
                            type='radio' <?php echo checked($default_checked, 'full');; ?> class='input-radio'
                            value='full'>
                     <label id="pay-full-amount-label" for='pay-full-amount'
-                           onclick=''><?php esc_html_e($full_text, 'woocommerce-deposits'); ?></label>
+                           onclick=''><?php esc_html_e($full_text, 'reservation-deposits'); ?></label>
                 <?php } ?>
                 <a class='wc-deposits-switcher'></a>
             </div>
@@ -56,10 +56,10 @@ do_action('wc_deposits_enqueue_deposit_button_scripts');
                                         $display_plan  = WC()->cart->deposit_info['payment_schedule'];
                                         ?>
                                         <span> <a data-expanded="no"
-                                                  data-view-text="<?php esc_html_e('View details', 'woocommerce-deposits'); ?>"
-                                                  data-hide-text="<?php esc_html_e('Hide details', 'woocommerce-deposits'); ?>"
+                                                  data-view-text="<?php esc_html_e('View details', 'reservation-deposits'); ?>"
+                                                  data-hide-text="<?php esc_html_e('Hide details', 'reservation-deposits'); ?>"
                                                   data-id="<?php echo $plan_id; ?>"
-                                                  class="wcdp-view-plan-details"><?php esc_html_e('View details', 'woocommerce-deposits'); ?></a>
+                                                  class="wcdp-view-plan-details"><?php esc_html_e('View details', 'reservation-deposits'); ?></a>
                                         </span>
                                         <div style="display:none" class="wcdp-single-plan"
                                              id="plan-details-<?php echo $plan_id; ?>">

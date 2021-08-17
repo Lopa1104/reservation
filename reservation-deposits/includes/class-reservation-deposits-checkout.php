@@ -104,9 +104,9 @@ class Reservation_Deposits_Checkout
         $basic_buttons = get_option('wc_deposits_use_basic_radio_buttons', true) === 'yes';
         $post_data = array();
 
-		$deposit_text = esc_html__('Pay Deposit', 'woocommerce-deposits');
-		$full_text = esc_html__('Full Amount', 'woocommerce-deposits');
-		$deposit_option_text = esc_html__('Deposit Option', 'woocommerce-deposits');
+		$deposit_text = esc_html__('Pay Deposit', 'reservation-deposits');
+		$full_text = esc_html__('Full Amount', 'reservation-deposits');
+		$deposit_option_text = esc_html__('Deposit Option', 'reservation-deposits');
         $selected_plan = '';
         $payment_plans = array();
 
@@ -169,7 +169,7 @@ class Reservation_Deposits_Checkout
 
             $deposit_data = array(
                 'id' => '',
-                'title' => esc_html__('Deposit', 'woocommerce-deposits'),
+                'title' => esc_html__('Deposit', 'reservation-deposits'),
                 'type' => 'deposit',
                 'total' => $deposit,
 
@@ -248,17 +248,17 @@ class Reservation_Deposits_Checkout
                 if ($display_rows && isset(WC()->cart->deposit_info['deposit_enabled']) && WC()->cart->deposit_info['deposit_enabled'] === true) {
 
 
-                    $to_pay_text = esc_html__(get_option('wc_deposits_to_pay_text'), 'woocommerce-deposits');
-                    $future_payment_text = esc_html__(get_option('wc_deposits_second_payment_text'), 'woocommerce-deposits');
+                    $to_pay_text = esc_html__(get_option('wc_deposits_to_pay_text'), 'reservation-deposits');
+                    $future_payment_text = esc_html__(get_option('wc_deposits_second_payment_text'), 'reservation-deposits');
 
 
                     if ($to_pay_text === false) {
-                        $to_pay_text = esc_html__('To Pay', 'woocommerce-deposits');
+                        $to_pay_text = esc_html__('To Pay', 'reservation-deposits');
                     }
 
 
                     if ($future_payment_text === false) {
-                        $future_payment_text = esc_html__('Future Payments', 'woocommerce-deposits');
+                        $future_payment_text = esc_html__('Future Payments', 'reservation-deposits');
                     }
                     $to_pay_text = stripslashes($to_pay_text);
                     $future_payment_text = stripslashes($future_payment_text);
