@@ -43,6 +43,15 @@ class Reservation_Deposits_Admin_Settings
 		?>
         <div id="checkout_mode">
             <?php
+			
+			$gateways_array = array();
+            $gateways = WC()->payment_gateways()->payment_gateways();
+            if (isset($gateways['wc-booking-gateway'])) unset($gateways['wc-booking-gateway']);// Protect the wc-booking-gateway
+
+            foreach ($gateways as $key => $gateway) {
+
+                $gateways_array[$key] = $gateway->title;
+            }
 
             $cart_checkout_settings = array(
 
@@ -87,7 +96,22 @@ class Reservation_Deposits_Admin_Settings
                         'step' => '0.01'
                     )
                 ),
-
+				'wc_deposits_disallowed_gateways_for_deposit' => array(
+					'name' => esc_html__('Disallowed For Deposits', 'woocommerce-deposits'),
+					'type' => 'multiselect',
+					'class' => 'chosen_select',
+					'options' => $gateways_array,
+					'desc' => esc_html__('Disallowed For Deposits', 'woocommerce-deposits'),
+					'id' => 'wc_deposits_disallowed_gateways_for_deposit',
+				),
+				'wc_deposits_disallowed_gateways_for_second_payment' => array(
+					'name' => esc_html__('Disallowed For Partial Payments', 'woocommerce-deposits'),
+					'type' => 'multiselect',
+					'class' => 'chosen_select',
+					'options' => $gateways_array,
+					'desc' => esc_html__('Disallowed For Partial Payments', 'woocommerce-deposits'),
+					'id' => 'wc_deposits_disallowed_gateways_for_second_payment',
+				),
 
             );
 
@@ -132,11 +156,14 @@ class Reservation_Deposits_Admin_Settings
 
         $settings = array();
 
-
         $settings['wc_deposits_checkout_mode_enabled'] = isset($_POST['wc_deposits_checkout_mode_enabled']) ? 'yes' : 'no';
         $settings['wc_deposits_checkout_mode_force_deposit'] = isset($_POST['wc_deposits_checkout_mode_force_deposit']) ? 'yes' : 'no';
         $settings['wc_deposits_checkout_mode_deposit_amount'] = isset($_POST['wc_deposits_checkout_mode_deposit_amount']) ? $_POST['wc_deposits_checkout_mode_deposit_amount'] : '0';
         $settings['wc_deposits_checkout_mode_deposit_amount_type'] = isset($_POST['wc_deposits_checkout_mode_deposit_amount_type']) ? $_POST['wc_deposits_checkout_mode_deposit_amount_type'] : 'percentage';
+		
+		//gateway options
+		$settings ['wc_deposits_disallowed_gateways_for_deposit'] = isset($_POST['wc_deposits_disallowed_gateways_for_deposit']) ? $_POST['wc_deposits_disallowed_gateways_for_deposit'] : array();
+		$settings ['wc_deposits_disallowed_gateways_for_second_payment'] = isset($_POST['wc_deposits_disallowed_gateways_for_second_payment']) ? $_POST['wc_deposits_disallowed_gateways_for_second_payment'] : array();
 
         foreach ($settings as $key => $setting) {
             update_option($key, $setting);

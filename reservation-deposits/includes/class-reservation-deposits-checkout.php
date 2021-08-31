@@ -24,14 +24,12 @@ class Reservation_Deposits_Checkout
             add_action('wc_deposits_enqueue_deposit_button_scripts', array($this, 'enqueue_scripts'), 20);
             add_action('woocommerce_checkout_update_order_review', array($this, 'update_order_review'), 10, 1);
             add_action('woocommerce_review_order_after_order_total', array($this, 'checkout_deposit_button'), 50);
-        } else {
-            //add_action('woocommerce_checkout_create_order_line_item', array($this, 'checkout_create_order_line_item'), 10, 4);
         }
 
         add_action('woocommerce_checkout_update_order_meta', array($this, 'checkout_update_order_meta'), 10, 2);
         add_action('woocommerce_review_order_after_order_total', array($this, 'review_order_after_order_total'));
         // Hook the payments gateways filter to remove the ones we don't want
-        //add_filter('woocommerce_available_payment_gateways', array($this, 'available_payment_gateways'));
+        add_filter('woocommerce_available_payment_gateways', array($this, 'available_payment_gateways'));
 
     }
 
@@ -64,7 +62,7 @@ class Reservation_Deposits_Checkout
     public function update_order_review($posted_data_string)
     {
 
-        parse_str($posted_data_string, $posted_data);
+        parse_str($posted_data_string, $posted_data); 
         if (!is_array(WC()->cart->deposit_info)) WC()->cart->deposit_info = array();
         if (isset($posted_data['deposit-radio']) && $posted_data['deposit-radio'] === 'deposit') {
             WC()->cart->deposit_info['deposit_enabled'] = true;
@@ -154,11 +152,75 @@ class Reservation_Deposits_Checkout
         $order = wc_get_order($order_id);
 
 
-        if ($order->get_type() === 'wcdp_payment') {
+        if ($order->get_type() === 'reservation_payment') {
             return;
         }
+		
+		if (!isset(WC()->cart->deposit_info['deposit_enabled'])){
+			
+			if (isset($_POST['deposit-radio']) && $_POST['deposit-radio'] === 'deposit') {
+				WC()->cart->deposit_info['deposit_enabled'] = true;
+				//WC()->cart->deposit_info['deposit_breakdown'] = $deposit_breakdown;
+				//WC()->cart->deposit_info['deposit_amount'] = $deposit_amount;
+				//WC()->cart->deposit_info['has_payment_plans'] = $this->has_payment_plans;
+				
+				$fees_handling = get_option('wc_deposits_fees_handling');
+				$taxes_handling = get_option('wc_deposits_taxes_handling');
+				$shipping_handling = get_option('wc_deposits_shipping_handling');
+				$shipping_taxes_handling = get_option('wc_deposits_shipping_taxes_handling');
+		
+				// Default option: collect fees with the second payment.
+				$deposit_fees = 0.0;
+				$deposit_taxes = $full_amount_taxes;
+				$deposit_shipping = 0.0;
+				$deposit_shipping_taxes = 0.0;
+				$division = WC()->cart->get_subtotal();
+				
+				if (wcdp_checkout_mode()) {
+					$division = $division == 0 ? 1 : $division;
+					$deposit_percentage = round($deposit_amount * 100 / floatval($division),1);
+		
+				} else {
+					$division = $division == 0 ? 1 : $division;
+					$deposit_percentage = round($deposit_amount * 100 / floatval($division),1);
+		
+				}
+				$remaining_amounts = array();
 
+				/*
+				/*
+				* Fees handling.
+				*/
+		
+				$fee_taxes = $cart->get_fee_tax();
+				switch ($fees_handling) {
+					case 'deposit' :
+		
+						$deposit_fees = floatval($cart->fee_total + $fee_taxes);
+						break;
+		
+					case 'split' :
+						$deposit_fees = floatval($cart->fee_total + $fee_taxes) * $deposit_percentage / 100;
+		
+						break;
+				}
+				$remaining_amounts['fees'] = ($cart->fee_total + $fee_taxes) - $deposit_fees;
+				
+				
+				$deposit_breakdown = array(
+					'cart_items' => $cart_items_deposit_amount,
+					'fees' => $deposit_fees,
+					'taxes' => $deposit_taxes,
+					'shipping' => $deposit_shipping,
+					'shipping_taxes' => $deposit_shipping_taxes,
+					'discounts' => 0.0
+				);
+			}
 
+		}
+		
+		print_r($order);
+		die('bbbbbbbbb');
         if (isset(WC()->cart->deposit_info['deposit_enabled']) && WC()->cart->deposit_info['deposit_enabled'] === true) {
 
             $deposit = WC()->cart->deposit_info['deposit_amount'];
@@ -216,6 +278,8 @@ class Reservation_Deposits_Checkout
 
             }
         }
+		
+		die('vvvvvvvv');
     }
 	
 	
@@ -293,6 +357,35 @@ class Reservation_Deposits_Checkout
 
     }
 	
-	
+	/**
+     * @brief Removes the unwanted gateways from the settings page when there's a deposit
+     *
+     * @return mixed
+     */
+    public function available_payment_gateways($gateways)
+    {
+        $has_deposit = false;
+
+
+		if (wcdp_checkout_mode() && is_ajax() && isset($_POST['post_data'])) {
+			parse_str($_POST['post_data'], $post_data);
+
+			if (isset($post_data['deposit-radio']) && $post_data['deposit-radio'] === 'deposit') {
+				$has_deposit = true;
+				
+				$disallowed_gateways = get_option('wc_deposits_disallowed_gateways_for_deposit');
+				
+				if (is_array($disallowed_gateways)) {
+					foreach ($disallowed_gateways as $value) {
+						unset($gateways[$value]);
+					}
+				}
+			}
+
+		}
+
+
+        return $gateways;
+    }
 	
 }
