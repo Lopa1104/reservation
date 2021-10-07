@@ -19,12 +19,9 @@ class Reservation_Deposits_Checkout
     public function __construct()
     {
 
-        if (wcdp_checkout_mode()) {
-
-            add_action('wc_deposits_enqueue_deposit_button_scripts', array($this, 'enqueue_scripts'), 20);
-            add_action('woocommerce_checkout_update_order_review', array($this, 'update_order_review'), 10, 1);
-            add_action('woocommerce_review_order_after_order_total', array($this, 'checkout_deposit_button'), 50);
-        }
+        add_action('wc_deposits_enqueue_deposit_button_scripts', array($this, 'enqueue_scripts'), 20);
+		add_action('woocommerce_checkout_update_order_review', array($this, 'update_order_review'), 10, 1);
+		add_action('woocommerce_review_order_after_order_total', array($this, 'checkout_deposit_button'), 50);
 
         add_action('woocommerce_checkout_update_order_meta', array($this, 'checkout_update_order_meta'), 10, 2);
         add_action('woocommerce_review_order_after_order_total', array($this, 'review_order_after_order_total'));
@@ -121,7 +118,7 @@ class Reservation_Deposits_Checkout
 		if($amount_type == 'percentage'){
 			$deposit_amount = WC()->cart->get_subtotal() / 100 * $deposit_amount;
 		}
-		
+		$deposit_amount = ceil( $deposit_amount );
 		
         $args = array(
             'force_deposit' => $force_deposit,
@@ -159,101 +156,50 @@ class Reservation_Deposits_Checkout
 		if (!isset(WC()->cart->deposit_info['deposit_enabled'])){
 			
 			if (isset($_POST['deposit-radio']) && $_POST['deposit-radio'] === 'deposit') {
-				WC()->cart->deposit_info['deposit_enabled'] = true;
-				//WC()->cart->deposit_info['deposit_breakdown'] = $deposit_breakdown;
-				//WC()->cart->deposit_info['deposit_amount'] = $deposit_amount;
-				//WC()->cart->deposit_info['has_payment_plans'] = $this->has_payment_plans;
 				
-				$fees_handling = get_option('wc_deposits_fees_handling');
-				$taxes_handling = get_option('wc_deposits_taxes_handling');
-				$shipping_handling = get_option('wc_deposits_shipping_handling');
-				$shipping_taxes_handling = get_option('wc_deposits_shipping_taxes_handling');
-		
-				// Default option: collect fees with the second payment.
-				$deposit_fees = 0.0;
-				$deposit_taxes = $full_amount_taxes;
-				$deposit_shipping = 0.0;
-				$deposit_shipping_taxes = 0.0;
-				$division = WC()->cart->get_subtotal();
-				
-				if (wcdp_checkout_mode()) {
-					$division = $division == 0 ? 1 : $division;
-					$deposit_percentage = round($deposit_amount * 100 / floatval($division),1);
-		
-				} else {
-					$division = $division == 0 ? 1 : $division;
-					$deposit_percentage = round($deposit_amount * 100 / floatval($division),1);
-		
+				$deposit_amount = get_option('wc_deposits_checkout_mode_deposit_amount'); 
+        		$amount_type = get_option('wc_deposits_checkout_mode_deposit_amount_type');
+				if($amount_type == 'percentage'){
+					$deposit_amount = WC()->cart->get_subtotal() / 100 * $deposit_amount;
 				}
-				$remaining_amounts = array();
-
-				/*
-				/*
-				* Fees handling.
-				*/
-		
-				$fee_taxes = $cart->get_fee_tax();
-				switch ($fees_handling) {
-					case 'deposit' :
-		
-						$deposit_fees = floatval($cart->fee_total + $fee_taxes);
-						break;
-		
-					case 'split' :
-						$deposit_fees = floatval($cart->fee_total + $fee_taxes) * $deposit_percentage / 100;
-		
-						break;
-				}
-				$remaining_amounts['fees'] = ($cart->fee_total + $fee_taxes) - $deposit_fees;
+				
+				$deposit_amount = ceil( $deposit_amount );
+				$remaining_amount = (WC()->cart->get_subtotal()) - $deposit_amount;
 				
 				
-				$deposit_breakdown = array(
-					'cart_items' => $cart_items_deposit_amount,
-					'fees' => $deposit_fees,
-					'taxes' => $deposit_taxes,
-					'shipping' => $deposit_shipping,
-					'shipping_taxes' => $deposit_shipping_taxes,
-					'discounts' => 0.0
+				$deposit_data = array(
+					'id' => '',
+					'title' => esc_html__('Deposit', 'reservation-deposits'),
+					'type' => 'deposit',
+					'total' => $deposit_amount,
 				);
+				
+				$unlimited = array(
+					'id' => '',
+					'title' => esc_html__('Future Payment', 'reservation-deposits'),
+					'type' => 'second_payment',
+					'total' => $remaining_amount
+				);
+				$sorted_schedule = array('deposit' => $deposit_data) + array('unlimited' => $unlimited);
+				
+				$deposit_breakdown = "";
+				
+				//echo $deposit_amount.'-----------'.$remaining_amount;
+				$order->add_meta_data('_wc_deposits_payment_schedule', $sorted_schedule, true);
+				$order->add_meta_data('_wc_deposits_order_version', WC_DEPOSITS_VERSION, true);
+				$order->add_meta_data('_wc_deposits_order_has_deposit', 'yes', true);
+				$order->add_meta_data('_wc_deposits_deposit_paid', 'no', true);
+				$order->add_meta_data('_wc_deposits_second_payment_paid', 'no', true);
+				$order->add_meta_data('_wc_deposits_deposit_amount', $deposit_amount, true);
+				$order->add_meta_data('_wc_deposits_second_payment', $remaining_amount, true);
+				$order->add_meta_data('_wc_deposits_deposit_breakdown', $deposit_breakdown, true);
+				$order->add_meta_data('_wc_deposits_deposit_payment_time', ' ', true);
+				$order->add_meta_data('_wc_deposits_second_payment_reminder_email_sent', 'no', true);
+				$order->save();
+				
 			}
 
-		}
-		
-		print_r($order);
-		die('bbbbbbbbb');
-        if (isset(WC()->cart->deposit_info['deposit_enabled']) && WC()->cart->deposit_info['deposit_enabled'] === true) {
-
-            $deposit = WC()->cart->deposit_info['deposit_amount'];
-            $second_payment = WC()->cart->get_total('edit') - $deposit;
-            $deposit_breakdown = WC()->cart->deposit_info['deposit_breakdown'];
-            $sorted_schedule = WC()->cart->deposit_info['payment_schedule'];
-
-
-            $deposit_data = array(
-                'id' => '',
-                'title' => esc_html__('Deposit', 'reservation-deposits'),
-                'type' => 'deposit',
-                'total' => $deposit,
-
-            );
-
-
-            $sorted_schedule = array('deposit' => $deposit_data) + $sorted_schedule;
-
-            $order->add_meta_data('_wc_deposits_payment_schedule', $sorted_schedule, true);
-            $order->add_meta_data('_wc_deposits_order_version', WC_DEPOSITS_VERSION, true);
-            $order->add_meta_data('_wc_deposits_order_has_deposit', 'yes', true);
-            $order->add_meta_data('_wc_deposits_deposit_paid', 'no', true);
-            $order->add_meta_data('_wc_deposits_second_payment_paid', 'no', true);
-            $order->add_meta_data('_wc_deposits_deposit_amount', $deposit, true);
-            $order->add_meta_data('_wc_deposits_second_payment', $second_payment, true);
-            $order->add_meta_data('_wc_deposits_deposit_breakdown', $deposit_breakdown, true);
-            $order->add_meta_data('_wc_deposits_deposit_payment_time', ' ', true);
-            $order->add_meta_data('_wc_deposits_second_payment_reminder_email_sent', 'no', true);
-            $order->save();
-
-
-        } elseif (isset(WC()->cart->deposit_info['deposit_enabled']) && WC()->cart->deposit_info['deposit_enabled'] !== true) {
+		} else {
             $order_has_deposit = $order->get_meta('_wc_deposits_order_has_deposit', true);
 
             if ($order_has_deposit === 'yes') {
@@ -279,7 +225,7 @@ class Reservation_Deposits_Checkout
             }
         }
 		
-		die('vvvvvvvv');
+		
     }
 	
 	
@@ -331,7 +277,7 @@ class Reservation_Deposits_Checkout
 					if($amount_type == 'percentage'){
 						$deposit_amount = WC()->cart->get_subtotal() / 100 * $deposit_amount;
 					}
-					
+					$deposit_amount = ceil($deposit_amount);
                     ?>
 
 

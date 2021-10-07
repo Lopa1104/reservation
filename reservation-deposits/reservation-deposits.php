@@ -232,7 +232,13 @@ class WC_Deposits
 		if ($this->wc_version_disabled) return;
 
 		include('includes/admin/class-reservation-deposits-admin-settings.php');
+		include('includes/admin/class-reservation-deposits-admin-order.php');
 		$this->admin_settings = new Reservation_Deposits_Admin_Settings($this);
+        $this->admin_order = new Reservation_Deposits_Admin_Order($this);
+
+		include('includes/admin/class-reservation-deposits-admin-product.php');
+		$this->admin_product = new Reservation_Deposits_Admin_Product($this);
+			
 	}
 	
 	
@@ -256,6 +262,7 @@ class WC_Deposits
 		require('includes/class-reservation-deposits-orders.php');
 		$this->orders = new Reservation_Deposits_Orders($this);
 	}
+	
 	
 	public static function plugin_activated()
 	{

@@ -1052,15 +1052,16 @@ class Reservation_Deposits_Orders
     function create_order($order_id, $checkout)
     {
 
-
+		
         //return if there is no deposit in cart
         if (!isset(WC()->cart->deposit_info['deposit_enabled']) || WC()->cart->deposit_info['deposit_enabled'] !== true) {
-            return null;
+            //return null;
+			//die('xxxx');
         }
 
         $data = $checkout->get_posted_data();
 
-
+		
         try {
             $order_id = absint(WC()->session->get('order_awaiting_payment'));
             $cart_hash = WC()->cart->get_cart_hash();
@@ -1068,7 +1069,7 @@ class Reservation_Deposits_Orders
 
             $order = $order_id ? wc_get_order($order_id) : null;
 
-
+			
             /**
              * If there is an order pending payment, we can resume it here so
              * long as it has not changed. If the order has changed, i.e.
@@ -1155,11 +1156,11 @@ class Reservation_Deposits_Orders
             $order->read_meta_data();
             $payment_schedule = $order->get_meta('_wc_deposits_payment_schedule');
 
-
+			
             $deposit_id = null;
             foreach ($payment_schedule as $partial_key => $payment) {
 
-                $partial_payment = new Reservation_Payment();
+                $partial_payment = new Reservation_Payment(); 
 
 
                 $partial_payment->set_customer_id(apply_filters('woocommerce_checkout_customer_id', get_current_user_id()));
@@ -1233,6 +1234,9 @@ class Reservation_Deposits_Orders
         } catch (Exception $e) {
             return new WP_Error('checkout-error', $e->getMessage());
         }
+		
+		
+		
     }
 
 

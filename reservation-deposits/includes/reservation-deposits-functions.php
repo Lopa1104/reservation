@@ -514,7 +514,7 @@ function wcdp_get_order_partial_payments($order_id, $args = array(), $object = t
 {
     $default_args = array(
         'post_parent' => $order_id,
-        'post_type' => 'wcdp_payment',
+        'post_type' => 'reservation_payment',
         'numberposts' => -1,
         'post_status' => 'any'
     );
@@ -527,7 +527,7 @@ function wcdp_get_order_partial_payments($order_id, $args = array(), $object = t
 
     foreach ( $partial_payments as $partial_payment) {
         $orders[] = ($object) ? wc_get_order($partial_payment->ID) : $partial_payment->ID;
-    }
+    } print_r($orders); die();
     return $orders;
 }
 
