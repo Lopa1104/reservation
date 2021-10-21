@@ -11,6 +11,7 @@ function wc_deposits_deposit_breakdown_tooltip()
 
     $display_tooltip = get_option('wc_deposits_breakdown_cart_tooltip') === 'yes';
 
+	//echo WC()->cart->deposit_info['deposit_breakdown']; die('vvvvvvvvvvvvv');
 
     $tooltip_html = '';
 
@@ -527,7 +528,7 @@ function wcdp_get_order_partial_payments($order_id, $args = array(), $object = t
 
     foreach ( $partial_payments as $partial_payment) {
         $orders[] = ($object) ? wc_get_order($partial_payment->ID) : $partial_payment->ID;
-    } print_r($orders); die();
+    } 
     return $orders;
 }
 

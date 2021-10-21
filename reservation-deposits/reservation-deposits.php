@@ -95,6 +95,7 @@ class WC_Deposits
 
 			//plugin row urls in plugins page
 			add_action('admin_notices', array($this, 'show_admin_notices'));
+			add_action('current_screen', array($this, 'setup_screen'), 10);
 
 		}
 
@@ -214,7 +215,37 @@ class WC_Deposits
 	{
 		array_push($this->admin_notices, array('content' => $content, 'type' => $type));
 	}
+	
+	
+	function setup_screen()
+	{
+		if ($this->wc_version_disabled) return;
 
+		$screen_id = false;
+
+		if (function_exists('get_current_screen')) {
+			$screen = get_current_screen();
+			$screen_id = isset($screen, $screen->id) ? $screen->id : '';
+		}
+
+		if (!empty($_REQUEST['screen'])) { // WPCS: input var ok.
+			$screen_id = wc_clean(wp_unslash($_REQUEST['screen'])); // WPCS: input var ok, sanitization ok.
+		}
+
+
+		switch ($screen_id) {
+			case 'edit-shop_order' :
+				include('includes/admin/list-tables/class-reservation-deposits-admin-list-table-orders.php');
+				$this->admin_list_table_orders = new Reservation_Deposits_Admin_List_Table_Orders($this);
+				break;
+			case 'edit-reservation_payment' :
+				include('includes/admin/list-tables/class-reservation-deposits-admin-list-table-partial-payments.php');
+				$this->admin_list_table_partial_payments = new Reservation_Deposits_Admin_List_Table_Partial_Payments();
+				break;
+
+		}
+	}
+	
 	/**
 	 * @return bool
 	 */

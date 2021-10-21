@@ -146,16 +146,15 @@ class Reservation_Deposits_Checkout
     public function checkout_update_order_meta($order_id)
     {
 
-        $order = wc_get_order($order_id);
+        $order = wc_get_order($order_id); 
 
 
         if ($order->get_type() === 'reservation_payment') {
             return;
         }
 		
-		if (!isset(WC()->cart->deposit_info['deposit_enabled'])){
 			
-			if (isset($_POST['deposit-radio']) && $_POST['deposit-radio'] === 'deposit') {
+		if (isset($_POST['deposit-radio']) && $_POST['deposit-radio'] === 'deposit') {
 				
 				$deposit_amount = get_option('wc_deposits_checkout_mode_deposit_amount'); 
         		$amount_type = get_option('wc_deposits_checkout_mode_deposit_amount_type');
@@ -196,9 +195,8 @@ class Reservation_Deposits_Checkout
 				$order->add_meta_data('_wc_deposits_deposit_payment_time', ' ', true);
 				$order->add_meta_data('_wc_deposits_second_payment_reminder_email_sent', 'no', true);
 				$order->save();
-				
-			}
 
+				
 		} else {
             $order_has_deposit = $order->get_meta('_wc_deposits_order_has_deposit', true);
 

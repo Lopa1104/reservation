@@ -1056,11 +1056,11 @@ class Reservation_Deposits_Orders
         //return if there is no deposit in cart
         if (!isset(WC()->cart->deposit_info['deposit_enabled']) || WC()->cart->deposit_info['deposit_enabled'] !== true) {
             //return null;
-			//die('xxxx');
+			//
         }
 
         $data = $checkout->get_posted_data();
-
+		
 		
         try {
             $order_id = absint(WC()->session->get('order_awaiting_payment'));
@@ -1068,7 +1068,7 @@ class Reservation_Deposits_Orders
             $available_gateways = WC()->payment_gateways->get_available_payment_gateways();
 
             $order = $order_id ? wc_get_order($order_id) : null;
-
+			
 			
             /**
              * If there is an order pending payment, we can resume it here so
@@ -1085,7 +1085,7 @@ class Reservation_Deposits_Orders
             } else {
                 $order = new WC_Order();
             }
-
+			
 
             $fields_prefix = array(
                 'shipping' => true,
@@ -1112,8 +1112,7 @@ class Reservation_Deposits_Orders
                     }
                 }
             }
-
-
+			
             $user_agent = wc_get_user_agent();
 
             $order->set_created_via('checkout');
@@ -1139,6 +1138,8 @@ class Reservation_Deposits_Orders
             $checkout->create_order_tax_lines($order, WC()->cart);
             $checkout->create_order_coupon_lines($order, WC()->cart);
 
+
+			
             /**
              * Action hook to adjust order before save.
              *
@@ -1162,7 +1163,7 @@ class Reservation_Deposits_Orders
 
                 $partial_payment = new Reservation_Payment(); 
 
-
+				
                 $partial_payment->set_customer_id(apply_filters('woocommerce_checkout_customer_id', get_current_user_id()));
 
                 $amount = $payment['total'];
@@ -1173,7 +1174,7 @@ class Reservation_Deposits_Orders
                 $partial_payment_name = apply_filters('wc_deposits_partial_payment_name', sprintf($name, $order->get_order_number()), $payment, $order->get_id());
 
 
-                $item = new WC_Order_Item_Fee();
+                $item = new WC_Order_Item_Fee(); 
 
 
                 $item->set_props(
@@ -1199,13 +1200,15 @@ class Reservation_Deposits_Orders
                 $partial_payment->set_customer_user_agent($user_agent);
 
                 $partial_payment->set_total($amount);
+				
+				
                 $partial_payment->save();
-
+				
+				
 
                 $payment_schedule[$partial_key]['id'] = $partial_payment->get_id();
 
-                //fix wpml language
-                $wpml_lang = $order->get_meta('wpml_language', true);
+
                 if ($payment['type'] === 'deposit') {
 
                     //we need to save to generate id first
@@ -1214,10 +1217,6 @@ class Reservation_Deposits_Orders
                     $deposit_id = $partial_payment->get_id();
                     $partial_payment->set_payment_method(isset($available_gateways[$data['payment_method']]) ? $available_gateways[$data['payment_method']] : $data['payment_method']);
 
-                    //add wpml language for all child orders for wpml
-                    if (!empty($wpml_lang)) {
-                        $partial_payment->update_meta_data('wpml_language', $wpml_lang);
-                    }
 
                     $partial_payment->save();
 
